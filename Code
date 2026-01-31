@@ -1,0 +1,74 @@
+## Shared schema and API contract
+
+import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+export const tips = pgTable("tips", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  author: text("author").default("Anonymous"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTipSchema = createInsertSchema(tips).omit({ id: true, createdAt: true });
+
+export type Tip = typeof tips.$inferSelect;
+export type InsertTip = z.infer<typeof insertTipSchema>;
+
+export const analyzeRequestSchema = z.object({
+  resumeText: z.string().min(1, "Resume content is required"),
+  jobDescription: z.string().min(1, "Job description is required"),
+});
+
+export type AnalyzeRequest = z.infer<typeof analyzeRequestSchema>;
+
+export interface AnalysisResult {
+  score: number;
+  matchedKeywords: string[];
+  missingKeywords: {
+    skills: string[];
+    tools: string[];
+    softSkills: string[];
+  };
+  optimizedResume: string;
+  feedback: string[];
+}
+
+##backend 
+
+
+import type { Express } from "express";
+import { storage } from "./storage";
+import { api } from "@shared/routes";
+
+export async function registerRoutes(httpServer: any, app: Express) {
+  app.get(api.tips.list.path, async (req, res) => res.json(await storage.getTips()));
+  app.post(api.tips.create.path, async (req, res) => res.status(201).json(await storage.createTip(req.body)));
+  
+  app.post(api.analyze.process.path, async (req, res) => {
+    const { resumeText, jobDescription } = req.body;
+    // Analysis Logic: Tokenization -> Match Score -> Keyword Categorization
+    const result = analyzeResume(resumeText, jobDescription); 
+    res.json(result);
+  });
+  return httpServer;
+}
+
+function analyzeResume(resume: string, jd: string) {
+  // Simple NLP: Stop-word removal and token matching
+  // ... (Full implementation in server/routes.ts)
+}
+
+##frontend 
+
+import { useState } from "react";
+import { ResultsView } from "@/components/ResultsView";
+import { Button } from "@/components/ui/button";
+
+export default function Home() {
+  const [resumeText, setResumeText] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+  // Handles File Upload, Sample Data, and API triggers
+  // ... (Full implementation in client/src/pages/Home.tsx)
+}
