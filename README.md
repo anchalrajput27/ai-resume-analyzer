@@ -24,7 +24,7 @@ The system compares keywords, calculates an ATS score,
 and suggests improvements.
 
 ## Live Demo
-Paste your Replit live URL here
+https://replit.com/@person270540/Resume-Insight
 
 ## Hackathon Note
 This project uses rule-based AI logic to demonstrate
